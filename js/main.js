@@ -159,7 +159,7 @@ requestAnimationFrame(() => {
 (() => {
   // ⬇️ PASTE your Google Apps Script Web App URL between the quotes.
   //    (Step-by-step in GOOGLE-SHEETS-SETUP.md — this is the ONLY line you edit.)
-  const SHEET_ENDPOINT = "PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+  const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzqYBiRwV5ufqMKjRF2cdS4B7oX73ynHRx_aea41jTAcJVv2xBENRQMOh6-zk7edE0K/exec";
 
   const forms = document.querySelectorAll(".quote-form");
 
