@@ -382,3 +382,140 @@ document.querySelectorAll('.faq-question').forEach(button => {
     }
   });
 });
+
+/* ===============================
+   ADDRESS AUTOCOMPLETE (Google Places — new API)
+   Builds a custom dropdown on any <input name="address"> so it matches the
+   site styling and works with current Google Maps keys.
+================================ */
+(() => {
+  // Wait until the Google Maps JS API (loaded async) is ready.
+  function whenMapsReady(cb) {
+    if (window.google && google.maps && google.maps.importLibrary) return cb();
+    let tries = 0;
+    const t = setInterval(() => {
+      if (window.google && google.maps && google.maps.importLibrary) {
+        clearInterval(t); cb();
+      } else if (++tries > 100) {       // ~10s then give up (field still usable)
+        clearInterval(t);
+      }
+    }, 100);
+  }
+
+  async function init() {
+    let places;
+    try {
+      places = await google.maps.importLibrary("places");
+    } catch (e) {
+      console.warn("Places library unavailable:", e);
+      return;
+    }
+    const { AutocompleteSuggestion, AutocompleteSessionToken } = places;
+    if (!AutocompleteSuggestion) return;
+    document
+      .querySelectorAll('input[name="address"]')
+      .forEach((input) => setupField(input, AutocompleteSuggestion, AutocompleteSessionToken));
+  }
+
+  function setupField(input, AutocompleteSuggestion, AutocompleteSessionToken) {
+    if (input.dataset.acReady) return;
+    input.dataset.acReady = "1";
+    input.setAttribute("autocomplete", "off");
+
+    const menu = document.createElement("div");
+    menu.className = "addr-ac-menu";
+    menu.style.display = "none";
+    document.body.appendChild(menu);
+
+    let items = [];        // {description, placePrediction}
+    let active = -1;
+    let token = new AutocompleteSessionToken();
+    let debounce;
+
+    function positionMenu() {
+      const r = input.getBoundingClientRect();
+      menu.style.left = r.left + "px";
+      menu.style.top = (r.bottom + 2) + "px";
+      menu.style.width = r.width + "px";
+    }
+
+    function closeMenu() {
+      menu.style.display = "none";
+      menu.innerHTML = "";
+      items = []; active = -1;
+    }
+
+    function render() {
+      if (!items.length) { closeMenu(); return; }
+      menu.innerHTML = "";
+      items.forEach((it, i) => {
+        const div = document.createElement("div");
+        div.className = "addr-ac-item" + (i === active ? " active" : "");
+        div.textContent = it.description;
+        div.addEventListener("mousedown", (e) => { e.preventDefault(); choose(i); });
+        menu.appendChild(div);
+      });
+      positionMenu();
+      menu.style.display = "block";
+    }
+
+    async function choose(i) {
+      const it = items[i];
+      if (!it) return;
+      try {
+        const place = it.placePrediction.toPlace();
+        await place.fetchFields({ fields: ["formattedAddress"] });
+        input.value = place.formattedAddress || it.description;
+      } catch (e) {
+        input.value = it.description;
+      }
+      input.setCustomValidity("");
+      closeMenu();
+      token = new AutocompleteSessionToken();  // start a fresh billing session
+    }
+
+    async function fetchSuggestions(value) {
+      try {
+        const { suggestions } =
+          await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+            input: value,
+            includedRegionCodes: ["us"],
+            sessionToken: token
+          });
+        items = (suggestions || [])
+          .filter((s) => s.placePrediction)
+          .slice(0, 5)
+          .map((s) => ({
+            description: s.placePrediction.text.text,
+            placePrediction: s.placePrediction
+          }));
+        active = -1;
+        render();
+      } catch (e) {
+        console.warn("Autocomplete fetch failed:", e);
+        closeMenu();
+      }
+    }
+
+    input.addEventListener("input", () => {
+      const v = input.value.trim();
+      clearTimeout(debounce);
+      if (v.length < 3) { closeMenu(); return; }
+      debounce = setTimeout(() => fetchSuggestions(v), 250);
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (menu.style.display === "none") return;
+      if (e.key === "ArrowDown") { e.preventDefault(); active = Math.min(active + 1, items.length - 1); render(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); active = Math.max(active - 1, 0); render(); }
+      else if (e.key === "Enter") { if (active >= 0) { e.preventDefault(); choose(active); } }
+      else if (e.key === "Escape") { closeMenu(); }
+    });
+
+    input.addEventListener("blur", () => setTimeout(closeMenu, 150));
+    window.addEventListener("scroll", () => { if (menu.style.display !== "none") positionMenu(); }, true);
+    window.addEventListener("resize", () => { if (menu.style.display !== "none") positionMenu(); });
+  }
+
+  whenMapsReady(init);
+})();

@@ -5668,3 +5668,34 @@ image below text
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================
+   ADDRESS AUTOCOMPLETE DROPDOWN
+========================================= */
+.addr-ac-menu{
+  position: fixed;
+  z-index: 99999;
+  background: #ffffff;
+  border: 1px solid #d9dfe7;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(11, 38, 70, 0.18);
+  overflow: hidden;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.addr-ac-item{
+  padding: 11px 14px;
+  font-size: 15px;
+  line-height: 1.3;
+  color: #0b2646;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f3f7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.addr-ac-item:last-child{ border-bottom: 0; }
+.addr-ac-item.active,
+.addr-ac-item:hover{
+  background: #eef3fa;
+}

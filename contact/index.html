@@ -28,7 +28,6 @@
   <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
   <link rel="stylesheet" href="../styles.css">
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 
 <body>
@@ -209,7 +208,6 @@
           <input name="reasonForSelling" type="text" placeholder="Reason for Selling" required>
           <input name="askingPrice" type="text" placeholder="Asking Price" required>
           <textarea name="message" rows="4" placeholder="Tell us about your situation" required></textarea>
-          <div class="g-recaptcha" data-sitekey="6Lei4qssAAAAANlAicGPJSRUy0Xr_mLEKgLT_AtR"></div>
           <button type="submit">SEND MESSAGE</button>
         </form>
         <div class="quote-thanks" id="quoteThanks" style="display:none;text-align:center;">
@@ -329,6 +327,9 @@
 </script>
 
 <script src="../js/main.js" defer></script>
+<!-- Google Maps Places (address autocomplete). Key setup: GOOGLE-MAPS-SETUP.md -->
+<script async
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBc9X80v6obtTTfNm8GGVd7puMFjcwCdjw&libraries=places&loading=async"></script>
 
 </body>
 </html>
