@@ -2390,44 +2390,58 @@ GOOGLE REVIEWS SECTION
   box-shadow: 0 30px 80px rgba(0,0,0,0.35);
 }
 
-/* Static review cards */
-.review-grid{
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-  max-width: 1000px;
+/* Reviews section — clean light background so text is easy to read */
+.reviews{
+  background: #f4f7fb;
+}
+.reviews-bg,
+.reviews-overlay{
+  display: none;
+}
+.reviews-title{
+  color: #0b2646;
+}
+
+/* Static review cards — masonry so different-length reviews pack evenly.
+   Scoped under .reviews to override legacy .review-grid/.review-name rules. */
+.reviews .review-grid{
+  display: block;
+  column-count: 2;
+  column-gap: 26px;
+  max-width: 980px;
   margin: 0 auto;
   text-align: left;
 }
-.review-card{
+.reviews .review-card{
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
   background: #ffffff;
+  border: 1px solid #e6ecf3;
   border-radius: 14px;
-  padding: 28px 30px;
-  box-shadow: 0 20px 55px rgba(0,0,0,0.28);
-  display: flex;
-  flex-direction: column;
+  padding: 26px 28px;
+  margin: 0 0 26px;
+  box-shadow: 0 10px 30px rgba(11, 38, 70, 0.08);
 }
-.review-stars{
+.reviews .review-stars{
   color: #f5a623;
   font-size: 18px;
   letter-spacing: 3px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
-.review-text{
+.reviews .review-text{
   color: #2a3340;
   font-size: 16px;
   line-height: 1.65;
-  margin: 0 0 18px;
-  flex: 1;
+  margin: 0 0 16px;
 }
-.review-name{
+.reviews .review-name{
   color: #0b2646;
   font-weight: 700;
   font-size: 15px;
   margin: 0;
 }
 @media (max-width: 720px){
-  .review-grid{ grid-template-columns: 1fr; }
+  .reviews .review-grid{ column-count: 1; }
 }
 
 /* Fix Elfsight floating badge spacing */
