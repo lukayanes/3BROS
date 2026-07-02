@@ -161,6 +161,10 @@ requestAnimationFrame(() => {
   //    (Step-by-step in GOOGLE-SHEETS-SETUP.md — this is the ONLY line you edit.)
   const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzqYBiRwV5ufqMKjRF2cdS4B7oX73ynHRx_aea41jTAcJVv2xBENRQMOh6-zk7edE0K/exec";
 
+  // ⬇️ PASTE your GoHighLevel Inbound Webhook URL between the quotes.
+  //    (Step-by-step in GHL-SETUP.md. Leave as-is to disable GHL.)
+  const GHL_WEBHOOK = "https://services.leadconnectorhq.com/hooks/jqNNzOB83nWOX9nzmy2Y/webhook-trigger/3d3173e3-3fbb-4fe9-9a5e-d1dc524f35da";
+
   const forms = document.querySelectorAll(".quote-form");
 
   forms.forEach((form) => {
@@ -209,19 +213,29 @@ requestAnimationFrame(() => {
   // (it does NOT parse multipart/form-data into e.parameter).
   const body = new URLSearchParams(new FormData(form));
 
+  // Split the full name into first/last so GoHighLevel maps them cleanly.
+  const fullName = (body.get("fullName") || "").trim();
+  if (fullName) {
+    const parts = fullName.split(/\s+/);
+    body.set("firstName", parts.shift());
+    body.set("lastName", parts.join(" "));
+  }
+
   submitting = true;
   const submitBtn = form.querySelector('[type="submit"]');
   if (submitBtn) { submitBtn.disabled = true; submitBtn.dataset.label = submitBtn.textContent; submitBtn.textContent = "Sending…"; }
 
-  try {
-    await fetch(SHEET_ENDPOINT, {
-      method: "POST",
-      body: body,
-      mode: "no-cors"
-    });
+  // Deliver to every configured destination (Google Sheet + GoHighLevel).
+  const targets = [SHEET_ENDPOINT];
+  if (GHL_WEBHOOK && GHL_WEBHOOK.indexOf("PASTE_") !== 0) targets.push(GHL_WEBHOOK);
 
-    // Google Apps Script responses are opaque to the browser (no-cors mode),
-    // so if the request didn't throw we treat it as delivered and thank the user.
+  try {
+    // Responses are opaque (no-cors); allSettled so one slow/failed endpoint
+    // never blocks the other or the thank-you message.
+    await Promise.allSettled(
+      targets.map((url) => fetch(url, { method: "POST", body: body, mode: "no-cors" }))
+    );
+
     form.style.display = "none";
     thanks.style.display = "block";
     form.reset();
