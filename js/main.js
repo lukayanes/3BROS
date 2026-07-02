@@ -172,13 +172,51 @@ requestAnimationFrame(() => {
 
     form.addEventListener("submit", async (e) => {
   e.preventDefault();
+  if (submitting) return;
 
-  const formData = new FormData(form);
+  // ---- Validation: email + phone ----
+  const emailEl = form.querySelector('[name="email"]');
+  const phoneEl = form.querySelector('[name="phone"]');
+
+  if (emailEl) {
+    emailEl.setCustomValidity("");
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim());
+    if (!emailOk) {
+      emailEl.setCustomValidity("Please enter a valid email address (e.g. name@example.com).");
+      emailEl.reportValidity();
+      return;
+    }
+  }
+
+  if (phoneEl) {
+    phoneEl.setCustomValidity("");
+    const digits = phoneEl.value.replace(/\D/g, "");
+    const phoneOk = digits.length === 10 || (digits.length === 11 && digits[0] === "1");
+    if (!phoneOk) {
+      phoneEl.setCustomValidity("Please enter a valid 10-digit U.S. phone number.");
+      phoneEl.reportValidity();
+      return;
+    }
+  }
+
+  // Let the browser check the remaining required fields too.
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  // Send as URL-encoded so Google Apps Script can read the fields
+  // (it does NOT parse multipart/form-data into e.parameter).
+  const body = new URLSearchParams(new FormData(form));
+
+  submitting = true;
+  const submitBtn = form.querySelector('[type="submit"]');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.dataset.label = submitBtn.textContent; submitBtn.textContent = "Sending…"; }
 
   try {
     await fetch(SHEET_ENDPOINT, {
       method: "POST",
-      body: formData,
+      body: body,
       mode: "no-cors"
     });
 
@@ -190,9 +228,17 @@ requestAnimationFrame(() => {
 
   } catch (err) {
     console.error("FETCH ERROR:", err);
+    submitting = false;
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = submitBtn.dataset.label || "Submit"; }
     alert("Something went wrong sending your info. Please try again or call us at (727) 618-7152.");
   }
 });
+
+  // Clear the custom error as soon as the user edits the field.
+  ["email", "phone"].forEach((n) => {
+    const el = form.querySelector('[name="' + n + '"]');
+    if (el) el.addEventListener("input", () => el.setCustomValidity(""));
+  });
   });
 })();
 

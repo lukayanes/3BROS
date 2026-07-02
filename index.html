@@ -677,12 +677,25 @@
 </script>
 
 <script src="./js/main.js" defer></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBpNDWLS_Emyb_Oh41lvO3W39XoZ2P71mw&libraries=places"></script>
 <script>
-  new google.maps.places.Autocomplete(
-    document.getElementById("address-input"),
-    { types:["address"], componentRestrictions:{country:"us"}, fields:["formatted_address"] }
-  );
+  /* Runs once Google Maps has loaded. If the key is missing/invalid, the
+     address box still works as a normal text field — nothing breaks. */
+  function initAddressAutocomplete() {
+    var el = document.getElementById("address-input");
+    if (!el || !(window.google && google.maps && google.maps.places)) return;
+    try {
+      new google.maps.places.Autocomplete(el, {
+        types: ["address"],
+        componentRestrictions: { country: "us" },
+        fields: ["formatted_address"]
+      });
+    } catch (err) {
+      console.warn("Address autocomplete unavailable:", err);
+    }
+  }
 </script>
+<!-- ⬇️ Replace YOUR_GOOGLE_MAPS_API_KEY with your own key (see GOOGLE-MAPS-SETUP.md) -->
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places&callback=initAddressAutocomplete"></script>
 </body>
 </html>
